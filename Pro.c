@@ -8,10 +8,8 @@
 #include <fcntl.h>
 
 
-
-
 int inp, outp;
-int multi_redirect, pipAndredirect, pipf;
+int multiRedirect, pipAndredirect, pipf;
 int inpcnt, outcnt;
 
 char* input_file ,* output_file;
@@ -22,13 +20,12 @@ void eHandling(char* temp[])
 {
 	int i=0;
 	while(temp[i]!= NULL){
-    if (strcmp (temp[i],"<") == 0) inpcnt++;
-    if (strcmp (temp[i],">") == 0) outcnt++;
-    if (inpcnt == 1 && outcnt == 1)
-        multi_redirect = 1;
-    i++;
+	    if (strcmp (temp[i],"<") == 0) inpcnt++;
+	    if (strcmp (temp[i],">") == 0) outcnt++;
+	    if (inpcnt == 1 && outcnt == 1)
+		multiRedirect = 1;
+    	    i++;
 	}
-  
 }
 
 
@@ -50,12 +47,10 @@ int readInput(char line[],char pipargv[])
 
 int parsing(char Line[],char *all[])
 {
-
-	int i=0;
+	int i = 0;
 	if(strcnmp(Line, "exit", 4) == 0) exit(0);
 
-	all[i] = strtok(Line, D);
-
+	all[0] = strtok(Line, D);
 	while(all[i] != NULL)
 		i++, all[i] = strtok(NULL, D);
 	
@@ -67,19 +62,12 @@ int checker(char* all[])
 	int i = 0;
 	while (all[i] != NULL)
 	{
-		if (strcmp(all[i], "<") == 0)
-			inp = 1, input_file = all[i+1];
-
-		if (strcmp(all[i], ">") == 0)
-			outp = 1, output_file = all[i+1];
-		
-		if(strcmp(all[i], "|") == 0)
-			pipf = 1;
+		if (strcmp(all[i], "<") == 0) inp = 1, input_file = all[i+1];
+		if (strcmp(all[i], ">") == 0) outp = 1, output_file = all[i+1];
+		if(strcmp(all[i], "|") == 0)pipf = 1;
 		i++;
 	}
-		if((inp==1 || outp ==1) && pipf == 1)
-			pipAndredirect = 1;
-				
+		if(( inp==1 || outp ==1 ) && pipf == 1) pipAndredirect = 1;
 	return 1;
 }
 
@@ -210,9 +198,9 @@ void execute (char *argv[], char* all[],char pipargv[])
 
 	if(pid > 0)
 	{
-			wait(NULL);
+	    wait(NULL);
 	    inp = 0, outp = 0, pipf = 0;
-      input_file = NULL, output_file = NULL;
+      	    input_file = NULL, output_file = NULL;
 	}
 }
 
