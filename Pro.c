@@ -9,21 +9,19 @@
 
 
 int inp, outp;
-int multiRedirect, pipAndredirect, pipf;
+int pipAndredirect, pipf;
 int inpcnt, outcnt;
 
 char* input_file ,* output_file;
 char D[]= {' ','^','*'};
 
 
-void eHandling(char* temp[])
+void Handling(char* temp[])
 {
 	int i=0;
 	while(temp[i]!= NULL){
 	    if (strcmp (temp[i],"<") == 0) inpcnt++;
 	    if (strcmp (temp[i],">") == 0) outcnt++;
-	    if (inpcnt == 1 && outcnt == 1)
-		multiRedirect = 1;
     	    i++;
 	}
 }
@@ -36,7 +34,7 @@ int readInput(char line[],char pipargv[])
       	      fgets(line, 1024, stdin); //reading input by stdin
 
 	      int i = 0;
-	      while(Line[i]!='\n')
+	      while(line[i]!='\n')
 		  pipargv[i] = line[i], i++;
 
 	      line[i]='\0', pipargv[i]='\0';
@@ -48,7 +46,7 @@ int readInput(char line[],char pipargv[])
 int parsing(char Line[],char *all[])
 {
 	int i = 0;
-	if(strcnmp(Line, "exit", 4) == 0) exit(0);
+	if(strcmp(Line, "exit" ) == 0) exit(0);
 
 	all[0] = strtok(Line, D);
 	while(all[i] != NULL)
@@ -112,7 +110,7 @@ void finingTheCommand(char* all[], char* argv[])
           	j = 0;
           	ar[i][j] = strtok(cmd[i], D);
 
-        	while(arr1[i][j] != NULL)
+        	while(ar[i][j] != NULL)
           		j++, ar[i][j] = strtok(NULL, D);
         
         	pipe(fd);
@@ -123,14 +121,14 @@ void finingTheCommand(char* all[], char* argv[])
           		if(inp == 1 && pipAndredirect == 1)
          		 {	
             			j = 0;
-            			while (ar[i][j] != NULL)
+            			while(ar[i][j] != NULL)
             			{
-              				if (strcmp(ar[i][j], "<") == 0)
+              				if(strcmp(ar[i][j], "<") == 0)
               				{
-						while (ar[i][j] != NULL)
+						while(ar[i][j] != NULL)
 						  ar[i][j] = NULL, j++;
 						
-                				inp = 0, break;
+                				inp = 0; break;
               				}
               				j++;
             			}
@@ -145,14 +143,14 @@ void finingTheCommand(char* all[], char* argv[])
 			if(outp == 1 && pipAndredirect == 1 && cmd[i+1] == NULL)
 			{	
 			    j = 0;
-			    while (ar[i][j] != NULL)
+			    while(ar[i][j] != NULL)
 			    {
-				if (strcmp(ar[i][j], ">") == 0)
+				if(strcmp(ar[i][j], ">") == 0)
 				{
-				    while (ar[i][j] != NULL)
+				    while(ar[i][j] != NULL)
 				      ar[i][j] = NULL, j++;
 
-				    outp = 0, break;
+				    outp = 0; break;
 				}
 				j++;
 			    }
@@ -160,7 +158,7 @@ void finingTheCommand(char* all[], char* argv[])
             		dup2(open(output_file, O_RDWR| O_CREAT, 0777),1);
           	}
           	close(fd[0]);
-          	execvp(arr1[i][0],arr1[i]);
+          	execvp(ar[i][0],ar[i]);
           	exit(0);
         }
 
@@ -220,7 +218,7 @@ int main()
         parsing(Line, all);
         checker(all);
 
-        eHandling(all);
+        Handling(all);
         finingTheCommand(all, argv);
 
         execute(argv, all, pipargv);
