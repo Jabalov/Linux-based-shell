@@ -48,7 +48,7 @@ int readInput(char Line[],char Line1[])
 }
 
 char *directory;
-int parsing(char line[],char *all[])
+int parse(char line[],char *all[])
 {
 
 	int i=0;
@@ -214,7 +214,7 @@ void fineCMD(char* all[], char* argv[])
 }
 
 
-void execute (char *argv[], char* all[],char pipargv[])
+void execute(char *argv[], char* all[],char pipargv[])
 {
 	int pid = fork();
 
@@ -254,7 +254,7 @@ int main()
         printf("\nMAT@linux:>>>");
         readInput(Line, pipargv);
 
-        parsing(Line, all);
+        parse(Line, all);
         checkRP(all);
 
         countRP(all);
