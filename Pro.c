@@ -8,83 +8,108 @@
 #include <fcntl.h>
 
 
+
+
 int inp, outp;
-int pipAndredirect, pipf;
+int multi_redirect, pipAndredirect, pipf;
 int inpcnt, outcnt;
 
 char* input_file ,* output_file;
 char D[]= {' ','^','*'};
 
 
-void Handling(char* temp[])
+void countRP(char* all[])
 {
 	int i=0;
-	while(temp[i]!= NULL){
-	    if (strcmp (temp[i],"<") == 0) inpcnt++;
-	    if (strcmp (temp[i],">") == 0) outcnt++;
-    	    i++;
+	while(all[i]!= NULL){
+    if (strcmp (all[i],"<") == 0) inpcnt++;
+    if (strcmp (all[i],">") == 0) outcnt++;
+    if (inpcnt == 1 && outcnt == 1)
+        multi_redirect = 1;
+    i++;
 	}
+  
 }
 
 
-int readInput(char line[],char pipargv[])
+int readInput(char Line[],char Line1[])
 {
 	while(1)
 	{
-      	      fgets(line, 1024, stdin); //reading input by stdin
+      fgets(Line, 1024, stdin);
 
-	      int i = 0;
-	      while(line[i]!='\n')
-		  pipargv[i] = line[i], i++;
-
-	      line[i]='\0', pipargv[i]='\0';
-	      return 1;
+      int i = 0;
+      while(Line[i]!='\n')
+          Line1[i]=Line[i], i++;
+            
+      Line[i]='\0', Line1[i]='\0';
+      return 1;
 	}
 }
 
-
-int parsing(char Line[],char *all[])
+char *directory;
+int parsing(char line[],char *all[])
 {
-	int i = 0;
-	if(strcmp(Line, "exit" ) == 0) exit(0);
 
-	all[0] = strtok(Line, D);
+	int i=0;
+	if(strcmp(line, "exit")==0) 
+    exit(0);
+  if(strcmp(line, "cd") == 0)
+  {
+			directory = line[1];
+			chdir(directory);
+			if(chdir(directory) == -1)
+				fprintf(stderr, "shell: Error changing directory\n");	
+	}
+
+	all[i] = strtok(line, D);
 	while(all[i] != NULL)
 		i++, all[i] = strtok(NULL, D);
 	
 	return 1;
 }
 
-int checker(char* all[])
+int checkRP(char* temp[])
 {
-	int i = 0;
-	while (all[i] != NULL)
+	int i=0;
+
+	while (temp[i] != NULL)
 	{
-		if (strcmp(all[i], "<") == 0) inp = 1, input_file = all[i+1];
-		if (strcmp(all[i], ">") == 0) outp = 1, output_file = all[i+1];
-		if(strcmp(all[i], "|") == 0)pipf = 1;
+		if (strcmp(temp[i], "<") == 0)
+			inp = 1, input_file = temp[i+1];
+
+		if (strcmp(temp[i], ">") == 0)
+			outp = 1, output_file = temp[i+1];
+		
+		if(strcmp(temp[i], "|") == 0)
+			pipf = 1;
 		i++;
 	}
-		if(( inp==1 || outp ==1 ) && pipf == 1) pipAndredirect = 1;
+		if((inp == 1 || outp == 1) && pipf == 1)
+			pipAndredirect = 1;
+				
 	return 1;
 }
 
-int position(char* all[])
+int getPos(char* temp[])
 {
 	int i = 0;
-	while (all[i]!= NULL)
+	while (temp[i]!= NULL)
 	{
 		if(inpcnt == 1 || outcnt == 1)
-			 if((strcmp(all[i], "<") == 0) || (strcmp(all[i], ">") == 0))
+		{
+			 if((strcmp(temp[i], "<") == 0) || (strcmp(temp[i], ">") == 0))
 				return i;
+		}
+
 		i++;
 	}
 	return i;
 }
 
-void finingTheCommand(char* all[], char* argv[])
+void fineCMD(char* all[], char* argv[])
 {
-	int p = position(all);
+	int p = getPos(all);
 	int i = 0;
 	while (i < p)
 		argv[i] = all[i], i++;
@@ -93,73 +118,87 @@ void finingTheCommand(char* all[], char* argv[])
 	return;
 }
 
- void pipe_handler(char pipargv[])  //Pipe
+ void pipeHandle(char pipargv[])  //Pipe
 {
-	  pid_t pid;
-    	  int fd[2];
+	  int status2, pid;
+    int fd[2];
 	  int fd_in = 0, i = 0, j= 0;
-	  char *ar[64][64], *cmd[64];
+	  char *arr1[64][64], *cmd[64];
 
-    	  cmd[0] = strtok(pipargv, "|");
+
+    cmd[0] = strtok(pipargv, "|");
 	  while (cmd[i] != NULL)
 		    i++, cmd[i] = strtok(NULL, "|");
 	  
-	  i = 0;
-	  while(cmd[i] != NULL)
-    	  {	
-          	j = 0;
-          	ar[i][j] = strtok(cmd[i], D);
 
-        	while(ar[i][j] != NULL)
-          		j++, ar[i][j] = strtok(NULL, D);
-        
-        	pipe(fd);
-        	pid = fork();
+	  i=0;
 
-        	if(pid == 0)
-        	{
-          		if(inp == 1 && pipAndredirect == 1)
-         		 {	
-            			j = 0;
-            			while(ar[i][j] != NULL)
-            			{
-              				if(strcmp(ar[i][j], "<") == 0)
-              				{
-						while(ar[i][j] != NULL)
-						  ar[i][j] = NULL, j++;
-						
-                				inp = 0; break;
-              				}
-              				j++;
-            			}
-            		dup2(open(input_file, O_RDWR| O_CREAT, 0777),0);
-          	}
-          	else
-            		dup2(fd_in, 0);
+  while(cmd[i] != NULL)
+    {	
+        j=0;
+        arr1[i][j] = strtok(cmd[i], D);
 
-          	if(cmd[i+1] != NULL)
-            		dup2(fd[1], 1);
+        while(arr1[i][j]!=NULL)
+        {
+          j++;
+          arr1[i][j] = strtok(NULL, D);
+        }
 
-			if(outp == 1 && pipAndredirect == 1 && cmd[i+1] == NULL)
-			{	
-			    j = 0;
-			    while(ar[i][j] != NULL)
-			    {
-				if(strcmp(ar[i][j], ">") == 0)
-				{
-				    while(ar[i][j] != NULL)
-				      ar[i][j] = NULL, j++;
+        pipe(fd);
+        pid = fork();
 
-				    outp = 0; break;
-				}
-				j++;
-			    }
+        if(pid == 0)
+        {
+          if(inp == 1 && pipAndredirect == 1)
+          {	
+            j=0;
+            while (arr1[i][j] != NULL)
+            {
+              if (strcmp(arr1[i][j], "<") == 0)
+              {
+                while (arr1[i][j] != NULL)
+                {
+                  arr1[i][j]=NULL;
+                  j++;
+                }
+                inp = 0;
+                break;
 
-            		dup2(open(output_file, O_RDWR| O_CREAT, 0777),1);
-          	}
-          	close(fd[0]);
-          	execvp(ar[i][0],ar[i]);
-          	exit(0);
+              }
+              j++;
+            }
+            dup2(open(input_file, O_RDWR| O_CREAT, 0777),0);
+          }
+          else
+            dup2(fd_in, 0);
+
+          if(cmd[i+1] != NULL)
+            dup2(fd[1], 1);
+
+          if(outp == 1 && pipAndredirect == 1 && cmd[i+1] == NULL)
+          {	
+            j = 0;
+            while (arr1[i][j] != NULL)
+            {
+                if (strcmp(arr1[i][j], ">") == 0)
+                {
+                    while (arr1[i][j] != NULL)
+                    {
+                      arr1[i][j] = NULL;
+                      j++;
+                    }
+                    outp = 0;
+                    break;
+
+                }
+                j++;
+            }
+
+            dup2(open(output_file, O_RDWR| O_CREAT, 0777),1);
+          }
+          close(fd[0]);
+          execvp(arr1[i][0],arr1[i]);
+          exit(0);
         }
 
         else if (pid > 0)
@@ -189,9 +228,9 @@ void execute (char *argv[], char* all[],char pipargv[])
 			dup2(open(output_file, O_RDWR| O_CREAT, 0777), 1);
 
 		if (pipf != 1)
-	      execvp(argv[0], argv);
+	      		execvp(argv[0], argv);
 		else
-			pipe_handler(pipargv), exit(0);
+			pipeHandle(pipargv), exit(0);
 	}
 
 	if(pid > 0)
@@ -216,11 +255,12 @@ int main()
         readInput(Line, pipargv);
 
         parsing(Line, all);
-        checker(all);
+        checkRP(all);
 
-        Handling(all);
-        finingTheCommand(all, argv);
+        countRP(all);
+        fineCMD(all, argv);
 
         execute(argv, all, pipargv);
+
     }
 }
